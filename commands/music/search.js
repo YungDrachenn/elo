@@ -27,6 +27,9 @@ module.exports = {
         const queue = await player.createQueue(inter.guild, {
             metadata: inter.channel,
             leaveOnEnd: client.config.opt.leaveOnEnd,
+            autoSelfDeaf: client.config.opt.autoSelfDeaf,
+            leaveOnEmpty: client.config.opt.leaveOnEmpty,
+            leaveOnStop: client.config.opt.leaveOnStop
         });
         const maxTracks = res.tracks.slice(0, 10);
 
@@ -55,7 +58,13 @@ module.exports = {
             collector.stop();
 
             try {
-                if (!queue.connection) await queue.connect(inter.member.voice.channel);
+                if (!queue.connection) {
+                    if(client.config.opt.fixedChannel) {
+                        await queue.connect(client.config.opt.fixedChannel); // Connect to fixed channel if set.
+                    } else {
+                        await queue.connect(inter.member.voice.channel);
+                    }
+                }
             } catch {
                 await player.deleteQueue(inter.guildId);
                 return inter.followUp({ content: `I can't join the voice channel ${inter.member}... try again ? ❌`, ephemeral: true });
